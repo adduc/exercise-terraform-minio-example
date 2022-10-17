@@ -1,0 +1,25 @@
+services:
+  minio:
+    # https://hub.docker.com/r/minio/minio
+    image: minio/minio:RELEASE.2022-10-15T19-57-03Z
+    command: minio server /data --console-address :9001
+    ports: [ 9000:9000, 9001:9001 ]
+    volumes:
+      - ./data/minio:/data
+    environment:
+      MINIO_ROOT_USER: root
+      MINIO_ROOT_PASSWORD: password
+    healthcheck:
+      test: curl -I http://localhost:9000/minio/health/live
+      interval: 2s
+      timeout: 1s
+      retries: 10
+
+  terragrunt:
+    image: ockawin/v1-app-duplicity:edge-amd64
+    command: tail -f /dev/null
+    volumes: [ ./src:/src ]
+    working_dir: /src
+    depends_on:
+      minio:
+        condition: service_healthy
